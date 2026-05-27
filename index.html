@@ -482,7 +482,7 @@
     <section class="hud" aria-live="polite">
       <div class="hud-top">
         <div>Points: <span id="points">0</span></div>
-        <div>Progress: <span id="stepLabel">0/5</span></div>
+        <div>Progress: <span id="stepLabel">0/6</span></div>
         <button class="mini-btn hidden" id="restartActivityBtn" type="button">Restart activity</button>
       </div>
       <div class="bar-wrap">
@@ -496,6 +496,7 @@
       <button class="nav-btn" data-target="s3">Activity 3</button>
       <button class="nav-btn" data-target="s4">Activity 4</button>
       <button class="nav-btn" data-target="s5">Activity 5</button>
+      <button class="nav-btn" data-target="s6">Final Exam</button>
       <button class="nav-btn" data-target="final">Final score</button>
     </section>
 
@@ -585,6 +586,17 @@
       <p class="feedback" id="feedback5"></p>
     </section>
 
+    <!-- Activity 6: Final exam -->
+    <section class="screen" id="screen-6">
+      <h2>Activity 6: Final Exam</h2>
+      <p class="subtitle">Advanced challenge: grammar, vocabulary and sentence accuracy.</p>
+      <div class="quiz-list" id="finalExamList"></div>
+      <div class="btn-wrap">
+        <button class="btn" id="checkFinalExamBtn">Submit final exam</button>
+      </div>
+      <p class="feedback" id="feedback6"></p>
+    </section>
+
     <!-- Final screen -->
     <section class="screen" id="screen-final">
       <h2>Great effort!</h2>
@@ -659,6 +671,86 @@
       }
     ];
 
+    const finalExamData = [
+      {
+        type: "mcq",
+        q: "By this time tomorrow, we ___ volleyball on the beach.",
+        options: ["play", "will be playing", "played", "have played"],
+        answer: "will be playing",
+        points: 2
+      },
+      {
+        type: "mcq",
+        q: "Choose the best correction: 'She don't like snorkelling.'",
+        options: ["She doesn't likes snorkelling.", "She doesn't like snorkelling.", "She not like snorkelling.", "She didn't likes snorkelling."],
+        answer: "She doesn't like snorkelling.",
+        points: 2
+      },
+      {
+        type: "mcq",
+        q: "Which sentence is correct?",
+        options: ["We are having picnic every Sunday.", "We have picnic every Sunday.", "We have a picnic every Sunday.", "We has a picnic every Sunday."],
+        answer: "We have a picnic every Sunday.",
+        points: 2
+      },
+      {
+        type: "mcq",
+        q: "Choose the best response: 'Do they make sandcastles?'",
+        options: ["Yes, they do.", "Yes, they are.", "Yes, they does.", "Yes, they did."],
+        answer: "Yes, they do.",
+        points: 2
+      },
+      {
+        type: "mcq",
+        q: "Complete the sentence: 'If it is sunny, we ___ to the beach.'",
+        options: ["go", "goes", "went", "going"],
+        answer: "go",
+        points: 2
+      },
+      {
+        type: "mcq",
+        q: "Pick the sentence in present continuous:",
+        options: ["He plays frisbee every weekend.", "They have a picnic on Sundays.", "I am collecting shells right now.", "She goes canoeing in August."],
+        answer: "I am collecting shells right now.",
+        points: 2
+      },
+      {
+        type: "text",
+        q: "Rewrite correctly: 'He are making a sandcastle.'",
+        answers: ["he is making a sandcastle"],
+        points: 3
+      },
+      {
+        type: "text",
+        q: "Write a complete sentence in English using 'sunbathe' and 'every summer'.",
+        answers: [
+          "i sunbathe every summer",
+          "we sunbathe every summer",
+          "they sunbathe every summer",
+          "she sunbathes every summer",
+          "he sunbathes every summer"
+        ],
+        points: 3
+      },
+      {
+        type: "text",
+        q: "Translate to English: 'Nosotros hacemos una barbacoa en el campamento.'",
+        answers: [
+          "we have a barbecue at the camp",
+          "we have a barbecue in the camp",
+          "we have a barbecue at camp",
+          "we have a barbecue in camp"
+        ],
+        points: 3
+      },
+      {
+        type: "text",
+        q: "Write the short negative form: 'She plays volleyball.'",
+        answers: ["she doesnt play volleyball", "she does not play volleyball"],
+        points: 3
+      }
+    ];
+
     // -------------------------
     // Global state
     // -------------------------
@@ -672,6 +764,7 @@
     let writingIndex = 0;
     let writingCorrectCount = 0;
     let writingScoredPrompts = new Set();
+    let finalExamBestScore = 0;
     let selectedDragItem = null;
     let studiedCards = new Set();
     const completedActivities = {
@@ -679,8 +772,10 @@
       s2: false,
       s3: false,
       s4: false,
-      s5: false
+      s5: false,
+      s6: false
     };
+    const totalActivities = Object.keys(completedActivities).length;
 
     // -------------------------
     // DOM shortcuts
@@ -692,6 +787,7 @@
       s3: document.getElementById("screen-3"),
       s4: document.getElementById("screen-4"),
       s5: document.getElementById("screen-5"),
+      s6: document.getElementById("screen-6"),
       final: document.getElementById("screen-final")
     };
 
@@ -719,8 +815,8 @@
 
     function updateProgress(step) {
       currentStep = step;
-      stepLabel.textContent = `${step}/5`;
-      progressBar.style.width = `${(step / 5) * 100}%`;
+      stepLabel.textContent = `${step}/${totalActivities}`;
+      progressBar.style.width = `${(step / totalActivities) * 100}%`;
     }
 
     function refreshNavStatus() {
@@ -743,11 +839,11 @@
     function showScreen(name) {
       Object.values(screens).forEach(screen => screen.classList.remove("active"));
       screens[name].classList.add("active");
-      restartActivityBtn.classList.toggle("hidden", !["s1", "s2", "s3", "s4", "s5"].includes(name));
+      restartActivityBtn.classList.toggle("hidden", !["s1", "s2", "s3", "s4", "s5", "s6"].includes(name));
     }
 
     function getCurrentActivity() {
-      const activityKeys = ["s1", "s2", "s3", "s4", "s5"];
+      const activityKeys = ["s1", "s2", "s3", "s4", "s5", "s6"];
       return activityKeys.find(key => screens[key].classList.contains("active")) || null;
     }
 
@@ -774,6 +870,9 @@
         document.getElementById("feedback5").textContent = "";
         studiedCards = new Set();
         setupStudy();
+      } else if (current === "s6") {
+        document.getElementById("feedback6").textContent = "";
+        setupFinalExam();
       }
     }
 
@@ -1069,6 +1168,11 @@
     }
 
     function checkWriting() {
+      if (writingIndex >= writingPrompts.length) {
+        setFeedback(document.getElementById("feedback4"), "Writing activity already completed. Restart activity to try again.", false);
+        return;
+      }
+
       const input = document.getElementById("writingInput");
       const answer = normalize(input.value);
       const current = writingPrompts[writingIndex];
@@ -1145,6 +1249,96 @@
     }
 
     // -------------------------
+    // Activity 6 setup and logic
+    // -------------------------
+    function setupFinalExam() {
+      const list = document.getElementById("finalExamList");
+      list.innerHTML = "";
+
+      finalExamData.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "quiz-item";
+        card.dataset.type = item.type;
+
+        const p = document.createElement("p");
+        p.textContent = `${index + 1}. ${item.q}`;
+        card.appendChild(p);
+
+        if (item.type === "mcq") {
+          const choices = document.createElement("div");
+          choices.className = "choices";
+
+          item.options.forEach(option => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "choice";
+            btn.textContent = option;
+            btn.addEventListener("click", () => {
+              choices.querySelectorAll(".choice").forEach(c => c.classList.remove("selected"));
+              btn.classList.add("selected");
+            });
+            choices.appendChild(btn);
+          });
+
+          card.appendChild(choices);
+        } else {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = "Write your answer here...";
+          input.autocomplete = "off";
+          card.appendChild(input);
+        }
+
+        list.appendChild(card);
+      });
+    }
+
+    function checkFinalExam() {
+      const cards = [...document.querySelectorAll("#finalExamList .quiz-item")];
+      const fb = document.getElementById("feedback6");
+      let examScore = 0;
+      const maxScore = finalExamData.reduce((sum, item) => sum + item.points, 0);
+
+      cards.forEach((card, index) => {
+        const question = finalExamData[index];
+        let correct = false;
+
+        if (question.type === "mcq") {
+          const selected = card.querySelector(".choice.selected");
+          correct = Boolean(selected && selected.textContent === question.answer);
+        } else {
+          const input = card.querySelector("input");
+          const normalized = normalize(input.value);
+          correct = question.answers.includes(normalized);
+        }
+
+        card.style.borderColor = correct ? "#8de5bb" : "#ff9caf";
+        card.style.background = correct ? "#eafff2" : "#fff0f4";
+        if (correct) examScore += question.points;
+      });
+
+      const gained = Math.max(0, examScore - finalExamBestScore);
+      if (gained > 0) {
+        addPoints(gained);
+        finalExamBestScore = examScore;
+      }
+
+      const percent = Math.round((examScore / maxScore) * 100);
+      if (percent >= 80) {
+        setFeedback(fb, `Outstanding! ${examScore}/${maxScore} (${percent}%). Exam passed with high level.`, true);
+        playSound("ok");
+      } else if (percent >= 60) {
+        setFeedback(fb, `Good work: ${examScore}/${maxScore} (${percent}%). You passed, but you can improve.`, true);
+        playSound("ok");
+      } else {
+        setFeedback(fb, `Result: ${examScore}/${maxScore} (${percent}%). Not enough yet, restart and try again.`, false);
+        playSound("bad");
+      }
+
+      markCompleted("s6");
+    }
+
+    // -------------------------
     // Final result screen
     // -------------------------
     function finishGame() {
@@ -1154,16 +1348,16 @@
       const starsEl = document.getElementById("stars");
       const msgEl = document.getElementById("finalMessage");
 
-      // Score guide with max around 40 points
-      if (points >= 34) {
+      // Score guide with max around 75 points
+      if (points >= 64) {
         starsEl.textContent = "⭐ ⭐ ⭐";
-        msgEl.textContent = "Excellent! You are a summer superstar!";
-      } else if (points >= 22) {
+        msgEl.textContent = "Excellent! Elite level achieved!";
+      } else if (points >= 45) {
         starsEl.textContent = "⭐ ⭐";
-        msgEl.textContent = "Great job! Keep practicing!";
+        msgEl.textContent = "Great job! Solid final performance!";
       } else {
         starsEl.textContent = "⭐";
-        msgEl.textContent = "Try again! You can do it!";
+        msgEl.textContent = "Keep training and retake the final exam!";
       }
     }
 
@@ -1181,6 +1375,7 @@
       writingIndex = 0;
       writingCorrectCount = 0;
       writingScoredPrompts = new Set();
+      finalExamBestScore = 0;
       selectedDragItem = null;
       studiedCards = new Set();
 
@@ -1194,11 +1389,13 @@
       document.getElementById("feedback3").textContent = "";
       document.getElementById("feedback4").textContent = "";
       document.getElementById("feedback5").textContent = "";
+      document.getElementById("feedback6").textContent = "";
 
       setupMatch();
       setupQuiz();
       setupDrag();
       setupStudy();
+      setupFinalExam();
       showWritingPrompt();
     }
 
@@ -1216,6 +1413,7 @@
     document.getElementById("checkDragBtn").addEventListener("click", checkDrag);
     document.getElementById("checkWritingBtn").addEventListener("click", checkWriting);
     document.getElementById("checkStudyBtn").addEventListener("click", checkStudy);
+    document.getElementById("checkFinalExamBtn").addEventListener("click", checkFinalExam);
     restartActivityBtn.addEventListener("click", restartCurrentActivity);
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
