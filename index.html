@@ -210,6 +210,27 @@
       margin-top: 16px;
     }
 
+    .mini-btn {
+      border: 2px solid #bde2ff;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mini-btn:hover {
+      background: #eef8ff;
+      border-color: #8ecbff;
+    }
+
+    .mini-btn.hidden {
+      display: none;
+    }
+
     .feedback {
       min-height: 30px;
       text-align: center;
@@ -462,6 +483,7 @@
       <div class="hud-top">
         <div>Points: <span id="points">0</span></div>
         <div>Progress: <span id="stepLabel">0/5</span></div>
+        <button class="mini-btn hidden" id="restartActivityBtn" type="button">Restart activity</button>
       </div>
       <div class="bar-wrap">
         <div class="bar" id="progressBar"></div>
@@ -649,6 +671,7 @@
     let studyChecked = false;
     let writingIndex = 0;
     let writingCorrectCount = 0;
+    let writingScoredPrompts = new Set();
     let selectedDragItem = null;
     let studiedCards = new Set();
     const completedActivities = {
@@ -676,6 +699,7 @@
     const stepLabel = document.getElementById("stepLabel");
     const progressBar = document.getElementById("progressBar");
     const activityNav = document.getElementById("activityNav");
+    const restartActivityBtn = document.getElementById("restartActivityBtn");
 
     // -------------------------
     // Utility functions
@@ -719,6 +743,38 @@
     function showScreen(name) {
       Object.values(screens).forEach(screen => screen.classList.remove("active"));
       screens[name].classList.add("active");
+      restartActivityBtn.classList.toggle("hidden", !["s1", "s2", "s3", "s4", "s5"].includes(name));
+    }
+
+    function getCurrentActivity() {
+      const activityKeys = ["s1", "s2", "s3", "s4", "s5"];
+      return activityKeys.find(key => screens[key].classList.contains("active")) || null;
+    }
+
+    function restartCurrentActivity() {
+      const current = getCurrentActivity();
+      if (!current) return;
+
+      if (current === "s1") {
+        document.getElementById("feedback1").textContent = "";
+        setupMatch();
+      } else if (current === "s2") {
+        document.getElementById("feedback2").textContent = "";
+        setupQuiz();
+      } else if (current === "s3") {
+        document.getElementById("feedback3").textContent = "";
+        selectedDragItem = null;
+        setupDrag();
+      } else if (current === "s4") {
+        document.getElementById("feedback4").textContent = "";
+        writingIndex = 0;
+        writingCorrectCount = 0;
+        showWritingPrompt();
+      } else if (current === "s5") {
+        document.getElementById("feedback5").textContent = "";
+        studiedCards = new Set();
+        setupStudy();
+      }
     }
 
     // Basic sound using Web Audio API (no external files)
@@ -1021,7 +1077,10 @@
 
       if (isCorrect) {
         writingCorrectCount += 1;
-        addPoints(3);
+        if (!writingScoredPrompts.has(writingIndex)) {
+          writingScoredPrompts.add(writingIndex);
+          addPoints(3);
+        }
         setFeedback(fb, "Great job!", true);
         playSound("ok");
       } else {
@@ -1121,6 +1180,7 @@
       studyChecked = false;
       writingIndex = 0;
       writingCorrectCount = 0;
+      writingScoredPrompts = new Set();
       selectedDragItem = null;
       studiedCards = new Set();
 
@@ -1156,6 +1216,7 @@
     document.getElementById("checkDragBtn").addEventListener("click", checkDrag);
     document.getElementById("checkWritingBtn").addEventListener("click", checkWriting);
     document.getElementById("checkStudyBtn").addEventListener("click", checkStudy);
+    restartActivityBtn.addEventListener("click", restartCurrentActivity);
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.addEventListener("click", () => {
