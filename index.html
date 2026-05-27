@@ -461,7 +461,6 @@
     <section class="hud" aria-live="polite">
       <div class="hud-top">
         <div>Points: <span id="points">0</span></div>
-        <div>Time: <span id="time">180</span>s</div>
         <div>Progress: <span id="stepLabel">0/5</span></div>
       </div>
       <div class="bar-wrap">
@@ -643,8 +642,6 @@
     // -------------------------
     let points = 0;
     let currentStep = 0;
-    let timer = 180;
-    let timerInterval = null;
 
     let matchChecked = false;
     let quizChecked = false;
@@ -676,7 +673,6 @@
     };
 
     const pointsEl = document.getElementById("points");
-    const timeEl = document.getElementById("time");
     const stepLabel = document.getElementById("stepLabel");
     const progressBar = document.getElementById("progressBar");
     const activityNav = document.getElementById("activityNav");
@@ -757,21 +753,6 @@
     function setFeedback(element, message, isGood) {
       element.textContent = message;
       element.className = "feedback " + (isGood ? "good" : "bad");
-    }
-
-    // -------------------------
-    // Timer
-    // -------------------------
-    function startTimer() {
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timer -= 1;
-        timeEl.textContent = timer;
-        if (timer <= 0) {
-          clearInterval(timerInterval);
-          finishGame();
-        }
-      }, 1000);
     }
 
     // -------------------------
@@ -1108,8 +1089,6 @@
     // Final result screen
     // -------------------------
     function finishGame() {
-      clearInterval(timerInterval);
-
       showScreen("final");
       document.getElementById("finalScore").textContent = points;
 
@@ -1134,8 +1113,6 @@
     // -------------------------
     function resetGame() {
       setPoints(0);
-      timer = 180;
-      timeEl.textContent = timer;
       updateProgress(0);
 
       matchChecked = false;
@@ -1172,7 +1149,6 @@
       resetGame();
       activityNav.classList.add("show");
       showScreen("s1");
-      startTimer();
     });
 
     document.getElementById("checkMatchBtn").addEventListener("click", checkMatch);
