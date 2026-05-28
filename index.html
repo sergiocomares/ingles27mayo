@@ -227,6 +227,12 @@
       border-color: #8ecbff;
     }
 
+    .mini-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      filter: grayscale(0.2);
+    }
+
     .mini-btn.hidden {
       display: none;
     }
@@ -458,6 +464,30 @@
       color: #215173;
     }
 
+    .solutions-wrap {
+      margin-top: 14px;
+      padding: 12px;
+      border: 2px solid #d7ebff;
+      border-radius: 12px;
+      background: #f7fbff;
+    }
+
+    .solutions-wrap h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .solutions-list {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .solutions-wrap.hidden {
+      display: none;
+    }
+
     @media (max-width: 820px) {
       .match-row {
         grid-template-columns: 1fr;
@@ -593,6 +623,13 @@
       <div class="quiz-list" id="finalExamList"></div>
       <div class="btn-wrap">
         <button class="btn" id="checkFinalExamBtn">Submit final exam</button>
+      </div>
+      <div class="btn-wrap">
+        <button class="mini-btn" id="toggleSolutionsBtn" type="button" disabled>Show solutions</button>
+      </div>
+      <div class="solutions-wrap hidden" id="finalSolutionsWrap" aria-live="polite">
+        <h3>Correct solutions</h3>
+        <ol class="solutions-list" id="finalSolutionsList"></ol>
       </div>
       <p class="feedback" id="feedback6"></p>
     </section>
@@ -796,6 +833,9 @@
     const progressBar = document.getElementById("progressBar");
     const activityNav = document.getElementById("activityNav");
     const restartActivityBtn = document.getElementById("restartActivityBtn");
+    const toggleSolutionsBtn = document.getElementById("toggleSolutionsBtn");
+    const finalSolutionsWrap = document.getElementById("finalSolutionsWrap");
+    const finalSolutionsList = document.getElementById("finalSolutionsList");
 
     // -------------------------
     // Utility functions
@@ -1291,6 +1331,21 @@
 
         list.appendChild(card);
       });
+
+      finalSolutionsList.innerHTML = "";
+      finalExamData.forEach((item, index) => {
+        const li = document.createElement("li");
+        if (item.type === "mcq") {
+          li.textContent = `${index + 1}. ${item.answer}`;
+        } else {
+          li.textContent = `${index + 1}. ${item.answers[0]}`;
+        }
+        finalSolutionsList.appendChild(li);
+      });
+
+      finalSolutionsWrap.classList.add("hidden");
+      toggleSolutionsBtn.textContent = "Show solutions";
+      toggleSolutionsBtn.disabled = true;
     }
 
     function checkFinalExam() {
@@ -1334,6 +1389,8 @@
         setFeedback(fb, `Result: ${examScore}/${maxScore} (${percent}%). Not enough yet, restart and try again.`, false);
         playSound("bad");
       }
+
+      toggleSolutionsBtn.disabled = false;
 
       markCompleted("s6");
     }
@@ -1414,6 +1471,11 @@
     document.getElementById("checkWritingBtn").addEventListener("click", checkWriting);
     document.getElementById("checkStudyBtn").addEventListener("click", checkStudy);
     document.getElementById("checkFinalExamBtn").addEventListener("click", checkFinalExam);
+    toggleSolutionsBtn.addEventListener("click", () => {
+      const isHidden = finalSolutionsWrap.classList.contains("hidden");
+      finalSolutionsWrap.classList.toggle("hidden", !isHidden);
+      toggleSolutionsBtn.textContent = isHidden ? "Hide solutions" : "Show solutions";
+    });
     restartActivityBtn.addEventListener("click", restartCurrentActivity);
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
